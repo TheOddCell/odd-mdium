@@ -2,7 +2,7 @@
 # MarkDownIum Terminal client (MDIT)
 # this code is MIT licenced
 # by TheOddCell
-VERSION=3.0.0
+VERSION=3.1.0
 
 # WebPath and URL parsing
 set -o pipefail
@@ -43,6 +43,7 @@ trap 'printf "\033[0m";clear;exec $0 $WEBPATH' SIGQUIT
 tput smcup
 clear
 WEBPATH="$1"
+WIDTH=${COLUMNS:-80};HEIGHT=${LINES:-24};BG=44;FG=97
 : "${WEBPATH:=home}"
 if [ "$WEBPATH" == "/" ]; then
   WEBPATH="/home"
@@ -59,12 +60,33 @@ case "$WEBPATH" in
     ;;
 esac
 # config.json
-: "${CONFIGDOTJSON:=https://wiki.obsidianos.xyz/config.json}"
+if [ -z "$CONFIGDOTJSON" ]; then
+  trap 'echo;read -p "Enter URI for config.json: " CONFIGDOTJSON;export CONFIGDOTJSON;clear;tput rmcup;exec $0' TSTP
+  TEXT2="MDIT v$VERSION - Choose a site - ^Z to manually choose a config.json"
+  if [ "${#TEXT2}" -ge "$WIDTH" ]; then TEXT2="MDIT - Choose a site - ^Z manual config.json";fi
+  if [ "${#TEXT2}" -ge "$WIDTH" ]; then TEXT2="MDIT - Choose a site - ^Z manual";fi
+  if [ "${#TEXT2}" -ge "$WIDTH" ]; then TEXT2="MDIT - Choose - ^Z manual";fi
+  if [ "${#TEXT2}" -ge "$WIDTH" ]; then TEXT2="MDIT v$VERSION";fi
+  if [ "${#TEXT2}" -ge "$WIDTH" ]; then TEXT2="MDIT";fi
+  if [ "${#TEXT2}" -ge "$WIDTH" ]; then TEXT2="MDT";fi
+  if [ "${#TEXT2}" -ge "$WIDTH" ]; then TEXT2="MD";fi
+  if [ "${#TEXT2}" -ge "$WIDTH" ]; then TEXT2="M";fi
+  if [ "${#TEXT2}" -ge "$WIDTH" ]; then
+    clear
+    tput rmcup
+    echo "Terminal must have an amount of columns!"
+    exit 1
+  fi
+  PAD=$((WIDTH - ${#TEXT2}))
+  printf "\033[H\033[${BG}m\033[1;${FG}m%s%${PAD}s\033[0m\n" "$TEXT2" ""
+  read -p "Enter website URL: " CONFIGDOTJSON
+  export CONFIGDOTJSON="$CONFIGDOTJSON/config.json"
+  exec "$0"
+fi
 URL="$(curl -fsSL $CONFIGDOTJSON | jq -r '.baseUrl')"
 LOGO="$(curl -fsSL $CONFIGDOTJSON | jq -r '.logo')"
 NAME="$(curl -fsSL $CONFIGDOTJSON | jq -r '.siteName')"
 LICENCE="$(curl -fsSL $CONFIGDOTJSON | jq -r '.licenseBadge')"
-WIDTH=${COLUMNS:-80};HEIGHT=${LINES:-24};BG=44;FG=97
 # styling
 format_text() {
   sed -E '
