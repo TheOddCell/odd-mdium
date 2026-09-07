@@ -83,10 +83,11 @@ if [ -z "$CONFIGDOTJSON" ]; then
   export CONFIGDOTJSON="$CONFIGDOTJSON/config.json"
   exec "$0"
 fi
-URL="$(curl -fsSL $CONFIGDOTJSON | jq -r '.baseUrl')"
-LOGO="$(curl -fsSL $CONFIGDOTJSON | jq -r '.logo')"
-NAME="$(curl -fsSL $CONFIGDOTJSON | jq -r '.siteName')"
-LICENCE="$(curl -fsSL $CONFIGDOTJSON | jq -r '.licenseBadge')"
+CONFIG_JSON="$(curl -fsSL "$CONFIGDOTJSON")"
+URL="$(printf '%s' "$CONFIG_JSON" | jq -r '.baseUrl')"
+LOGO="$(printf '%s' "$CONFIG_JSON" | jq -r '.logo')"
+NAME="$(printf '%s' "$CONFIG_JSON" | jq -r '.siteName')"
+LICENCE="$(printf '%s' "$CONFIG_JSON" | jq -r '.licenseBadge')"
 # styling
 format_text() {
   sed -E '
